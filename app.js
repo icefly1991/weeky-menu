@@ -13,7 +13,12 @@
     document.querySelectorAll('.view').forEach(el => el.hidden = el.id !== view);
     document.querySelectorAll('[data-view]').forEach(el => { el.classList.toggle('active', el.dataset.view === view); el.setAttribute('aria-pressed', String(el.dataset.view === view)); });
   };
-  $('calendar').innerHTML = data.days.map((day, i) => '<article class="day"><div class="day-head"><strong>周' + '一二三四五六日'[i] + '</strong><span>10.' + String(5 + i).padStart(2, '0') + '</span></div><div class="day-meals">' + day.map((meal, j) => '<div class="meal"><div class="meal-name">' + ['早餐','午餐','晚餐'][j] + '</div>' + meal.map(id => '<button class="dish" data-recipe="' + esc(id) + '">' + esc(recipes.get(id).name) + '</button>').join('') + '</div>').join('') + '</div></article>').join('');
+  const mealTypes = ['breakfast','lunch','dinner'];
+  $('calendar').innerHTML = data.schedule.map(day => '<article class="day" data-date="' + esc(day.date) + '"><div class="day-head"><strong>周' + '日一二三四五六'[WeekTools.weekday(day.date)] + '</strong><span title="' + day.date + '">' + day.date.slice(5).replace('-','/') + '</span></div><div class="day-meals">' + mealTypes.map((type,j) => '<div class="meal" data-meal="' + type + '"><div class="meal-name">' + ['早餐','午餐','晚餐'][j] + '</div>' + day.meals[type].map(id => '<button class="dish" data-recipe="' + esc(id) + '">' + esc(recipes.get(id).name) + '</button>').join('') + '</div>').join('') + '</div></article>').join('');
+  const weekEnd = WeekTools.addDays(data.weekStart,6);
+  const outCount = data.schedule.flatMap(day => mealTypes.flatMap(type => day.meals[type])).filter(id => recipes.get(id).name === '外食').length;
+  document.querySelector('.hero-meta').innerHTML = '<span>' + data.weekStart.replaceAll('-','.') + ' — ' + weekEnd.slice(5).replace('-','.') + '</span><span>夫妻两人份</span><span>' + outCount + ' 餐外食</span><span>' + data.recipes.length + ' 道食谱</span>';
+  document.title = '好好吃饭 · ' + data.weekStart + ' 一周菜单';
   function renderRecipes() {
     const query = $('search').value.trim().toLowerCase();
     const list = data.recipes.filter(r => (category === '全部' || r.category === category || r.type === category) && (r.name + ' ' + r.ingredients.map(x => x.name).join(' ')).toLowerCase().includes(query));
@@ -59,11 +64,11 @@
   $('recipe-dialog').addEventListener('click', event => { if (event.target === $('recipe-dialog')) { const rect = event.target.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) event.target.close(); } });
   $('recipe-dialog').addEventListener('close', () => returnFocus?.focus());
   const totals = new Map();
-  data.days.flat(2).forEach(id => recipes.get(id).ingredients.forEach(x => {
+  data.schedule.flatMap(day => mealTypes.flatMap(type => day.meals[type])).forEach(id => recipes.get(id).ingredients.forEach(x => {
     const key = x.name + '|' + x.unit; const item = totals.get(key) || {...x, quantity: 0, key}; item.quantity += x.quantity; totals.set(key, item);
   }));
   const group = name => /牛奶|酸奶|芝士|鸡蛋/.test(name) ? '蛋奶与乳制品' : /鸡(?:肉|腿|胸)|牛肉|猪肉|肉末|虾仁|三文鱼|豆腐|黑豆/.test(name) ? '肉鱼与豆类' : /米|燕麦|面包|玉米饼|水饺|小笼包|馒头|红薯/.test(name) ? '主食与冷冻早餐' : /油|盐|酱油|核桃|大蒜|柠檬/.test(name) ? '调味与其他' : '蔬菜与水果';
-  const storageKey = 'weekly-menu-shopping-' + (data.revision || data.weekStart);
+  const storageKey = 'weekly-menu-shopping-' + data.weekStart + '-' + (data.revision || '');
   let checked = [];
   try { const saved = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (Array.isArray(saved)) checked = saved.filter(x => typeof x === 'string'); } catch {}
   function renderShopping() {
@@ -82,7 +87,11 @@
     try { if (navigator.share) await navigator.share({title: document.title, url: location.href}); else { await navigator.clipboard.writeText(location.href); toast('分享链接已复制'); } } catch (error) { if (error.name !== 'AbortError') toast('请复制浏览器地址栏里的链接'); }
   });
   document.addEventListener('error', event => { if (event.target.tagName === 'IMG') { event.target.style.objectFit = 'contain'; event.target.removeAttribute('src'); } }, true);
-  const salmon = recipes.get('salmon'); $('hero-photo').src = salmon.image; $('hero-photo').referrerPolicy = 'no-referrer'; $('hero-source').href = salmon.url;
+  const firstLunch = data.schedule[0].meals.lunch.map(id=>recipes.get(id));
+  const heroRecipe = firstLunch.find(r=>r.id==='salmon') || firstLunch.find(r=>r.image) || data.recipes.find(r=>r.image);
+  if (heroRecipe) { $('hero-photo').src=heroRecipe.image; $('hero-photo').alt=heroRecipe.name+' · 来源图片示意'; $('hero-photo').referrerPolicy='no-referrer'; $('hero-source').href=heroRecipe.url; }
+  document.querySelector('.photo-label span').textContent = '周一午餐';
+  document.querySelector('.photo-label strong').textContent = firstLunch.filter(r=>r.category!=='加餐候选').map(r=>r.name).join(' · ');
   window.addEventListener('hashchange', () => setView(location.hash.slice(1)));
   renderRecipes(); renderShopping(); setView(location.hash.slice(1));
 })();
