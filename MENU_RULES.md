@@ -35,3 +35,7 @@
 - [CDC：孕期更安全的食物选择](https://www.cdc.gov/food-safety/foods/pregnant-women.html)
 - [ACOG：孕期健康饮食及关键营养素](https://www.acog.org/womens-health/faqs/healthy-eating-during-pregnancy)
 - [FDA/EPA：孕期吃鱼建议](https://www.fda.gov/food/consumers/advice-about-eating-fish)
+
+## 水果与坚果的检查
+
+每天检查早餐和加餐中已经包含的全果，避免只看菜名漏算。水果不强制餐后吃，可放在下午；蔬菜和水果一起看当天的种类与量。坚果是可选的不饱和脂肪和植物蛋白来源，不是孕期必吃项目；选原味无盐、不裹糖产品，已在早餐安排时不重复加，参考一人15–20克的小份量。按个人过敏限制调整，坚果不能替代鱼类或正餐。
