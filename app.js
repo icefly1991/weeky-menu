@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const data = window.MENU_DATA, recipes = new Map(data.recipes.map(r => [r.id, r]));
+  const data = window.MENU_DATA, recipes = new Map([...data.recipes, ...(data.dining || [])].map(r => [r.id, r]));
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const url = value => /^https:\/\//.test(value || '') ? esc(value) : '';
@@ -19,6 +19,15 @@
     const list = data.recipes.filter(r => (category === '全部' || r.category === category || r.type === category) && (r.name + ' ' + r.ingredients.map(x => x.name).join(' ')).toLowerCase().includes(query));
     $('recipe-grid').innerHTML = list.map(r => '<button class="recipe-card" data-recipe="' + esc(r.id) + '">' + photo(r) + '<span class="card-text"><strong>' + esc(r.name) + '</strong><span>' + esc(r.type || r.category) + ' · 约' + esc(r.minutes) + '分钟 · 两人份</span></span></button>').join('') || '<p>暂时没有匹配的菜，试试别的材料或分类。</p>';
   }
+  (data.dining || []).forEach(r => {
+    const button = document.querySelector('[data-recipe="' + r.id + '"]');
+    if (!button) return;
+    button.classList.add('out-dish');
+    const note = document.createElement('p');
+    note.className = 'small dining-time';
+    note.textContent = r.time;
+    button.after(note);
+  });
   const categories = ['全部', ...new Set(data.recipes.map(r => r.category)), ...new Set(data.recipes.map(r => r.type).filter(Boolean))];
   $('filters').innerHTML = categories.map(c => '<button data-category="' + esc(c) + '" aria-pressed="' + (c === category) + '" class="' + (c === category ? 'active' : '') + '">' + esc(c) + '</button>').join('');
   $('filters').addEventListener('click', event => {
@@ -29,6 +38,10 @@
   $('search').addEventListener('input', renderRecipes);
   function renderDetail() {
     const r = activeRecipe;
+    if (r.kind === 'dining') {
+      $('recipe-detail').innerHTML = '<div class="detail-body dining-detail"><p class="eyebrow">今晚在外面吃 · 两人安排</p><h2 id="dialog-name">' + esc(r.name) + '</h2><p class="nutrition">' + esc(r.time) + '</p><h3>优惠与条件</h3><p>' + esc(r.offer) + '</p><h3>搭配建议</h3><p>' + esc(r.ordering) + '</p><p>' + esc(r.safety) + '</p><p class="small">' + esc(r.address) + '</p><div class="source-note"><p>核实日期：' + esc(r.checkedAt) + '。外食原料不计入家中采购；此安排未代订位。</p>' + r.sources.map(s => '<a href="' + url(s.url) + '" target="_blank" rel="noopener noreferrer">' + esc(s.title) + ' ↗</a>').join('') + '</div></div>';
+      return;
+    }
     $('recipe-detail').innerHTML = photo(r, 'detail-photo') + '<div class="detail-body"><p class="eyebrow">' + esc(r.type || r.category) + '</p><h2 id="dialog-name">' + esc(r.name) + '</h2><div class="detail-meta"><span>约' + esc(r.minutes) + '分钟</span><div class="servings-control"><button data-servings="-1" aria-label="减少一人份"' + (servings === 1 ? ' disabled' : '') + '>−</button><span>' + servings + ' 人份</span><button data-servings="1" aria-label="增加一人份"' + (servings === 8 ? ' disabled' : '') + '>+</button></div></div><p class="nutrition">' + esc(r.nutrition) + '</p><div class="detail-columns"><div><h3>准备材料</h3>' + r.ingredients.map(x => '<div class="ingredient">' + esc(x.name) + '<span>' + amount(x.quantity * servings / 2) + ' ' + esc(x.unit) + '</span></div>').join('') + '</div><div><h3>简单做法</h3><ol class="steps">' + r.steps.map(step => '<li>' + esc(step) + '</li>').join('') + '</ol></div></div><div class="source-note"><p>' + esc(r.note) + '</p><p>做法已按家常做饭简化；图片展示来源菜品，可能与改方不同。</p><a href="' + url(r.url) + '" target="_blank" rel="noopener noreferrer">原食谱与图片来源 ↗</a></div></div>';
   }
   document.addEventListener('click', event => {
