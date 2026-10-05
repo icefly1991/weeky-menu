@@ -49,8 +49,8 @@
   data.days.flat(2).forEach(id => recipes.get(id).ingredients.forEach(x => {
     const key = x.name + '|' + x.unit; const item = totals.get(key) || {...x, quantity: 0, key}; item.quantity += x.quantity; totals.set(key, item);
   }));
-  const group = name => /牛奶|酸奶|芝士|鸡蛋/.test(name) ? '蛋奶与乳制品' : /鸡肉|牛肉|虾仁|三文鱼|豆腐|黑豆/.test(name) ? '肉鱼与豆类' : /米|燕麦|面包|玉米饼|水饺|小笼包|馒头|红薯/.test(name) ? '主食与冷冻早餐' : /油|盐|酱油|核桃|大蒜|柠檬/.test(name) ? '调味与其他' : '蔬菜与水果';
-  const storageKey = 'weekly-menu-shopping-' + data.weekStart;
+  const group = name => /牛奶|酸奶|芝士|鸡蛋/.test(name) ? '蛋奶与乳制品' : /鸡(?:肉|腿|胸)|牛肉|猪肉|肉末|虾仁|三文鱼|豆腐|黑豆/.test(name) ? '肉鱼与豆类' : /米|燕麦|面包|玉米饼|水饺|小笼包|馒头|红薯/.test(name) ? '主食与冷冻早餐' : /油|盐|酱油|核桃|大蒜|柠檬/.test(name) ? '调味与其他' : '蔬菜与水果';
+  const storageKey = 'weekly-menu-shopping-' + (data.revision || data.weekStart);
   let checked = [];
   try { const saved = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (Array.isArray(saved)) checked = saved.filter(x => typeof x === 'string'); } catch {}
   function renderShopping() {
