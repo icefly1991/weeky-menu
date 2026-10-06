@@ -60,7 +60,7 @@
       $('recipe-detail').innerHTML = '<div class="detail-body dining-detail"><h2 id="dialog-name">' + esc(r.name) + '</h2><ul>' + r.options.map(option => '<li>' + esc(option) + '</li>').join('') + '</ul>' + (r.note ? '<p class="small">' + esc(r.note) + '</p>' : '') + '</div>';
       return;
     }
-    $('recipe-detail').innerHTML = photo(r, 'detail-photo') + '<div class="detail-body"><p class="eyebrow">' + esc(r.type || r.category) + '</p><h2 id="dialog-name">' + esc(r.name) + '</h2><div class="detail-meta"><span>约' + esc(r.minutes) + '分钟</span><div class="servings-control"><button data-servings="-1" aria-label="减少一人份"' + (servings === 1 ? ' disabled' : '') + '>−</button><span>' + servings + ' 人份</span><button data-servings="1" aria-label="增加一人份"' + (servings === 8 ? ' disabled' : '') + '>+</button></div></div><p class="nutrition">' + esc(r.nutrition) + '</p><div class="detail-columns"><div><h3>准备材料</h3>' + r.ingredients.map(x => '<div class="ingredient">' + esc(x.name) + '<span>' + amount(x.quantity * servings / 2) + ' ' + esc(x.unit) + '</span></div>').join('') + '</div><div><h3>简单做法</h3><ol class="steps">' + r.steps.map(step => '<li>' + esc(step) + '</li>').join('') + '</ol></div></div><div class="source-note"><p>' + esc(r.note) + '</p><p>' + (r.image ? '做法已按家常做饭简化；图片展示来源菜品，可能与改方不同。' : '简单加餐按食材直接准备。') + '</p><a href="' + url(r.url) + '" target="_blank" rel="noopener noreferrer">参考来源 ↗</a></div></div>';
+    $('recipe-detail').innerHTML = photo(r, 'detail-photo') + '<div class="detail-body"><p class="eyebrow">' + esc(r.type || r.category) + '</p><h2 id="dialog-name">' + esc(r.name) + '</h2><div class="detail-meta"><span>约' + esc(r.minutes) + '分钟</span><div class="servings-control"><button data-servings="-1" aria-label="减少一人份"' + (servings === 1 ? ' disabled' : '') + '>−</button><span>' + servings + ' 人份</span><button data-servings="1" aria-label="增加一人份"' + (servings === 8 ? ' disabled' : '') + '>+</button></div></div><p class="nutrition">' + esc(r.nutrition) + '</p><div class="detail-columns"><div><h3>准备材料</h3>' + r.ingredients.map(x => '<div class="ingredient">' + esc(x.name) + '<span>' + (x.unstructured ? '数量待确认' : amount(x.quantity * servings / 2) + ' ' + esc(x.unit)) + '</span></div>').join('') + '</div><div><h3>简单做法</h3><ol class="steps">' + r.steps.map(step => '<li>' + esc(step) + '</li>').join('') + '</ol></div></div><div class="source-note"><p>' + esc(r.note) + '</p><p>' + (r.image ? '做法已按家常做饭简化；图片展示来源菜品，可能与改方不同。' : '简单加餐按食材直接准备。') + '</p><a href="' + url(r.url) + '" target="_blank" rel="noopener noreferrer">参考来源 ↗</a></div></div>';
   }
   document.addEventListener('click', event => {
     const recipeButton = event.target.closest('[data-recipe]');
@@ -87,7 +87,7 @@
   function renderShopping() {
     $('shopping-list').innerHTML = ['蔬菜与水果','肉鱼与豆类','蛋奶与乳制品','主食与冷冻早餐','调味与其他'].map(name => {
       const items = [...totals.values()].filter(x => group(x.name) === name);
-      return items.length ? '<section class="shopping-group"><h3>' + name + '</h3>' + items.map(x => '<label class="shopping-item"><input type="checkbox" data-item="' + esc(x.key) + '"' + (checked.includes(x.key) ? ' checked' : '') + '>' + esc(x.name) + '<span>' + amount(x.quantity) + ' ' + esc(x.unit) + '</span></label>').join('') + '</section>' : '';
+      return items.length ? '<section class="shopping-group"><h3>' + name + '</h3>' + items.map(x => '<label class="shopping-item"><input type="checkbox" data-item="' + esc(x.key) + '"' + (checked.includes(x.key) ? ' checked' : '') + '>' + esc(x.name) + '<span>' + (x.unstructured ? '数量待确认' : amount(x.quantity) + ' ' + esc(x.unit)) + '</span></label>').join('') + '</section>' : '';
     }).join('');
   }
   $('shopping-list').addEventListener('change', event => {
@@ -108,5 +108,6 @@
   window.addEventListener('hashchange', () => setView(location.hash.slice(1)));
   renderRecipes(); renderShopping(); setView(location.hash.slice(1));
 })();
+
 
 
