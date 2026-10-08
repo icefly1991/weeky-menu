@@ -6,3 +6,5 @@
 .week-picker{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 18px}.week-picker label{font-size:13px}.week-picker select{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:24px;padding:8px 16px;max-width:100%}.week-picker select:focus-visible{outline:3px solid #bd7c4b}.photo-label strong{overflow-wrap:anywhere}
 
 .nutrition-review{margin:24px 0;padding:18px;border:1px solid #dce4d8;border-radius:14px;background:#f7faf4}.nutrition-review summary{cursor:pointer;font-weight:600}.review-day{padding:10px 0;border-bottom:1px solid #e1e6dc}.review-day p{margin:6px 0;font-size:14px}.sync-stamp{margin-top:-6px;margin-bottom:18px}
+
+.stock-label{display:block;font-size:11px;color:#526e50;font-weight:400;margin-top:3px}.shopping-item .shopping-name{color:inherit;text-align:left;white-space:normal;min-width:0}

@@ -28,6 +28,14 @@
     $('calendar').after(details);
   }
   if(data.syncedAt){const stamp=document.createElement('p');stamp.className='small sync-stamp';stamp.textContent='从 Mealie 更新：'+new Date(data.syncedAt).toLocaleString('zh-CN',{timeZone:'America/Los_Angeles'})+'（西雅图时间）';document.querySelector('.week-picker').after(stamp);}
+  data.schedule.forEach(day => {
+    (day.actualMeals || []).forEach(type => {
+      const label=document.querySelector('[data-date="'+day.date+'"] [data-meal="'+type+'"] .meal-name');
+      if(label){label.textContent+=' · 实际记录';label.title=day.actualMealNotes?.[type]||'菜名已确认，实际份量与做法未核实';}
+    });
+  });
+  if(data.shoppingFromDate){document.querySelector('.shopping-note').textContent='仅汇总 '+data.shoppingFromDate.slice(5).replace('-','/')+' 起已确定的在家餐，已吃过的餐次不再采购。外食和未选配料的火锅不计入。家里已有食材的数量未知，请核对余量再购买；奶、水果和主食按实际剩余补齐。';}
+  if(data.pantry?.length){const p=document.createElement('p');p.className='small pantry-note';p.textContent='家里已有（余量待确认）：'+data.pantry.join('、');document.querySelector('.shopping-note').after(p);}
   const weekEnd = WeekTools.addDays(data.weekStart,6);
   const outCount = data.schedule.flatMap(day => mealTypes.flatMap(type => day.meals[type])).filter(id => recipes.get(id).name === '外食').length;
   document.querySelector('.hero-meta').innerHTML = '<span>' + data.weekStart.replaceAll('-','.') + ' — ' + weekEnd.slice(5).replace('-','.') + '</span><span>夫妻两人份</span><span>' + outCount + ' 餐外食</span><span>' + data.recipes.length + ' 道食谱</span>';
@@ -60,7 +68,7 @@
       $('recipe-detail').innerHTML = '<div class="detail-body dining-detail"><h2 id="dialog-name">' + esc(r.name) + '</h2><ul>' + r.options.map(option => '<li>' + esc(option) + '</li>').join('') + '</ul>' + (r.note ? '<p class="small">' + esc(r.note) + '</p>' : '') + '</div>';
       return;
     }
-    $('recipe-detail').innerHTML = photo(r, 'detail-photo') + '<div class="detail-body"><p class="eyebrow">' + esc(r.type || r.category) + '</p><h2 id="dialog-name">' + esc(r.name) + '</h2><div class="detail-meta"><span>约' + esc(r.minutes) + '分钟</span><div class="servings-control"><button data-servings="-1" aria-label="减少一人份"' + (servings === 1 ? ' disabled' : '') + '>−</button><span>' + servings + ' 人份</span><button data-servings="1" aria-label="增加一人份"' + (servings === 8 ? ' disabled' : '') + '>+</button></div></div><p class="nutrition">' + esc(r.nutrition) + '</p><div class="detail-columns"><div><h3>准备材料</h3>' + r.ingredients.map(x => '<div class="ingredient">' + esc(x.name) + '<span>' + (x.unstructured ? '数量待确认' : amount(x.quantity * servings / 2) + ' ' + esc(x.unit)) + '</span></div>').join('') + '</div><div><h3>简单做法</h3><ol class="steps">' + r.steps.map(step => '<li>' + esc(step) + '</li>').join('') + '</ol></div></div><div class="source-note"><p>' + esc(r.note) + '</p><p>' + (r.image ? '做法已按家常做饭简化；图片展示来源菜品，可能与改方不同。' : '简单加餐按食材直接准备。') + '</p><a href="' + url(r.url) + '" target="_blank" rel="noopener noreferrer">参考来源 ↗</a></div></div>';
+    $('recipe-detail').innerHTML = photo(r, 'detail-photo') + '<div class="detail-body"><p class="eyebrow">' + esc(r.type || r.category) + '</p><h2 id="dialog-name">' + esc(r.name) + '</h2><div class="detail-meta"><span>约' + esc(r.minutes) + '分钟</span><div class="servings-control"><button data-servings="-1" aria-label="减少一人份"' + (servings === 1 ? ' disabled' : '') + '>−</button><span>' + servings + ' 人份</span><button data-servings="1" aria-label="增加一人份"' + (servings === 8 ? ' disabled' : '') + '>+</button></div></div><p class="nutrition">' + esc(r.nutrition) + '</p><div class="detail-columns"><div><h3>准备材料</h3>' + r.ingredients.map(x => '<div class="ingredient">' + esc(x.name) + ((data.pantry || []).some(name => x.name.includes(name)) ? ' <small class="stock-label">家里已有 · 核对余量</small>' : '') + '<span>' + (x.unstructured ? '数量待确认' : amount(x.quantity * servings / 2) + ' ' + esc(x.unit)) + '</span></div>').join('') + '</div><div><h3>简单做法</h3><ol class="steps">' + r.steps.map(step => '<li>' + esc(step) + '</li>').join('') + '</ol></div></div><div class="source-note"><p>' + esc(r.note) + '</p><p>' + (r.image ? '做法已按家常做饭简化；图片展示来源菜品，可能与改方不同。' : '简单加餐按食材直接准备。') + '</p><a href="' + url(r.url) + '" target="_blank" rel="noopener noreferrer">参考来源 ↗</a></div></div>';
   }
   document.addEventListener('click', event => {
     const recipeButton = event.target.closest('[data-recipe]');
@@ -77,7 +85,7 @@
   $('recipe-dialog').addEventListener('click', event => { if (event.target === $('recipe-dialog')) { const rect = event.target.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) event.target.close(); } });
   $('recipe-dialog').addEventListener('close', () => returnFocus?.focus());
   const totals = new Map();
-  data.schedule.flatMap(day => [...mealTypes.flatMap(type => day.meals[type]), ...(day.snacks || [])]).forEach(id => recipes.get(id).ingredients.forEach(x => {
+  data.schedule.filter(day => !data.shoppingFromDate || day.date >= data.shoppingFromDate).flatMap(day => [...mealTypes.flatMap(type => day.meals[type]), ...(day.snacks || [])]).forEach(id => recipes.get(id).ingredients.forEach(x => {
     const key = x.name + '|' + x.unit; const item = totals.get(key) || {...x, quantity: 0, key}; item.quantity += x.quantity; totals.set(key, item);
   }));
   const group = name => /牛奶|酸奶|芝士|鸡蛋/.test(name) ? '蛋奶与乳制品' : /鸡(?:肉|腿|胸)|牛肉|猪肉|肉末|虾仁|三文鱼|豆腐|黑豆/.test(name) ? '肉鱼与豆类' : /米|燕麦|面包|玉米饼|水饺|小笼包|馒头|红薯/.test(name) ? '主食与冷冻早餐' : /油|盐|酱油|核桃|大蒜|柠檬/.test(name) ? '调味与其他' : '蔬菜与水果';
@@ -87,7 +95,7 @@
   function renderShopping() {
     $('shopping-list').innerHTML = ['蔬菜与水果','肉鱼与豆类','蛋奶与乳制品','主食与冷冻早餐','调味与其他'].map(name => {
       const items = [...totals.values()].filter(x => group(x.name) === name);
-      return items.length ? '<section class="shopping-group"><h3>' + name + '</h3>' + items.map(x => '<label class="shopping-item"><input type="checkbox" data-item="' + esc(x.key) + '"' + (checked.includes(x.key) ? ' checked' : '') + '>' + esc(x.name) + '<span>' + (x.unstructured ? '数量待确认' : amount(x.quantity) + ' ' + esc(x.unit)) + '</span></label>').join('') + '</section>' : '';
+      return items.length ? '<section class="shopping-group"><h3>' + name + '</h3>' + items.map(x => '<label class="shopping-item"><input type="checkbox" data-item="' + esc(x.key) + '"' + (checked.includes(x.key) ? ' checked' : '') + '><span class="shopping-name">' + esc(x.name) + ((data.pantry || []).some(name => x.name.includes(name)) ? '<small class="stock-label">家里已有 · 核对余量</small>' : '') + '</span><span>' + (x.unstructured ? '数量待确认' : amount(x.quantity) + ' ' + esc(x.unit)) + '</span></label>').join('') + '</section>' : '';
     }).join('');
   }
   $('shopping-list').addEventListener('change', event => {

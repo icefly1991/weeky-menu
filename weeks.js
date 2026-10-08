@@ -1,1 +1,1 @@
-window.WEEK_INDEX = [{"weekStart":"2026-10-05","file":"weeks/2026-10-05.js","revision":"2026-10-05-bd9b2484e830"},{"weekStart":"2026-10-12","file":"weeks/2026-10-12.js","revision":"2026-10-12-aff03842e335"}];
+window.WEEK_INDEX = [{"weekStart":"2026-10-05","file":"weeks/2026-10-05.js","revision":"2026-10-05-78b3c977fb56"},{"weekStart":"2026-10-12","file":"weeks/2026-10-12.js","revision":"2026-10-12-aff03842e335"}];
